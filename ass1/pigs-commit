@@ -1,0 +1,92 @@
+#!/bin/dash
+
+# ./pigs-commit saves the current state of the files
+# in the index into a commit inside the commits folder, 
+# essentially creating a "snapshot" of the state of the
+# files.
+
+# Checks if .pig has been initialised
+if [ ! -d ".pig" ]; then
+    echo "$0: error: pigs repository directory .pig not found"
+    exit 1
+fi
+
+# Checks if ./pigs-commit is run correctly
+if [ "$#" -lt 2 ] || [ "$#" -gt 3 ]; then
+    echo "Usage: $0 [-a] -m <commit-message>"
+    exit 1
+elif [ "$#" -eq 2 ] && [ "$1" != "-m" ]; then
+    echo "Usage: $0 [-a] -m <commit-message>"
+    exit 1
+elif [ "$#" -eq 3 ] && { [ "$1" != "-a" ] || [ "$2" != "-m" ]; }; then
+    echo "Usage: $0 [-a] -m <commit-message>"
+    exit 1
+fi
+
+# Saves the current state of the files in the index into 
+# a new commit inside the commits directory
+count=0
+index_path=".pig/index"
+commits_path=".pig/commits"
+commit_message="$2"
+recent_commit_num=$(ls -A "$commits_path" | cut -d"." -f3 | tail -1)
+while true; do
+    # When ./pigs-commit -a -m ... is run, it causes all the files already
+    # in the index to have their contents from the current directory added
+    # to the index and then committed in one command
+    if [ "$1" = "-a" ] && [ "$2" = "-m" ]; then
+        commit_message="$3"
+        # Check if the latest commit is the same as the current directory
+        if [ -d "$commits_path/.commit.$count" ]; then
+            changes=$(diff -r --exclude='*pig*' . "$commits_path/.commit.$count")
+            if [ -z "$changes" ]; then
+                echo "nothing to commit"
+                exit 0
+            fi
+            count=$((count + 1))
+        # Otherwise the files in the index now have the changes from their
+        # corresponding files in the working directory in a new commit
+        else
+            if [ -z "$(ls -A "$index_path")" ]; then
+                mkdir "$commits_path/.commit.$count"
+                echo "Committed as commit $count"
+                break
+            fi
+            mkdir "$commits_path/.commit.$count"
+            cp ./* "$index_path"
+            cp -r "$index_path"/* "$commits_path/.commit.$count"
+            echo "Committed as commit $count"
+            break
+        fi
+    # When ./pigs-commit -m ... is run, it saves the current state of the 
+    # files in the index into a new commit
+    elif [ "$1" = "-m" ]; then
+        commit_message="$2"
+        # Checks if the latest commit is the same as the staged files
+        if [ -d "$commits_path/.commit.$count" ]; then
+            if [ "$count" -eq "$recent_commit_num" ]
+            then
+                changes=$(diff -qr "$index_path" "$commits_path/.commit.$count")
+                if [ -z "$changes" ]
+                then
+                    echo "nothing to commit"
+                    exit 0
+                fi
+            fi
+            count=$((count + 1))
+        # Otherwise, create a new commit of the staged files
+        else
+            if [ -z "$(ls -A "$index_path")" ]; then
+                mkdir "$commits_path/.commit.$count"
+                echo "Committed as commit $count"
+                break
+            fi
+            mkdir "$commits_path/.commit.$count"
+            cp -r "$index_path"/* "$commits_path/.commit.$count"
+            echo "Committed as commit $count"
+            break
+        fi
+    fi
+done
+# Log the commits
+echo "$count $commit_message" >> ".pig/log"

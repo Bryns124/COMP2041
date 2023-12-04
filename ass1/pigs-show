@@ -1,0 +1,50 @@
+#!/bin/dash
+
+# ./pigs-show displays the content of a specified filename in a
+# specified commit. If the commit is omitted, the contents of the
+# specified filename in the index is displayed
+
+# Checks if .pig has been initialised
+if [ ! -d ".pig" ]; then
+    echo "$0: error: pigs repository directory .pig not found"
+    exit 1
+fi
+
+# Checks if ./pigs-show is run correctly
+if [ ! "$#" -eq 1 ]; then
+    echo "Usage: $0 [<commit>]:<filename>"
+    exit 1
+fi
+
+# Displays the contents of the specified filename in the specified commit
+commit_num=$(echo "$1" | cut -d":" -f1)
+commit_file=$(echo "$1" | cut -d":" -f2)
+commits_path=".pig/commits"
+index_path=".pig/index"
+# Checks if the commit is omitted
+if [ -z "$commit_num" ]; then
+    # Display the content of the specified filename in the index
+    if [ -f "$index_path"/"$commit_file" ]; then
+        cat "$index_path"/"$commit_file"
+    # Otherwise the file does not exist in the index
+    else 
+        echo "$0: error: '$commit_file' not found in index"
+        exit 1
+    fi
+# Otherwise, the commit is specified
+else
+    # If the commit doe snot exist
+    if [ ! -d "$commits_path"/.commit."$commit_num" ]; then
+        echo "$0: error: unknown commit '$commit_num'"
+        exit 1
+    # Otherwise the commit exists and checks whether the file exists
+    # in the commit
+    else
+        if [ -f "$commits_path"/.commit."$commit_num"/"$commit_file" ]; then
+            cat "$commits_path"/.commit."$commit_num"/"$commit_file"
+        else 
+            echo "$0: error: '$commit_file' not found in commit $commit_num"
+            exit 1
+        fi
+    fi
+fi

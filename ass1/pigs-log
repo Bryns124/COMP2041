@@ -1,0 +1,22 @@
+#!/bin/dash
+
+# ./pigs-log saves all the commits that have been run.
+# These commits are numbered with their corresponding 
+# message
+
+# Checks if .pig has been initialised
+if [ ! -d ".pig" ]; then
+    echo "$0: error: pigs repository directory .pig not found"
+    exit 1
+fi
+
+# Checks if ./pigs-log is run correctly
+if [ ! "$#" -eq 0 ]
+then
+    echo "Usage: $0"
+    exit 1
+fi
+
+# Sort the commits
+log_path=".pig/log"
+sort -r < "$log_path"

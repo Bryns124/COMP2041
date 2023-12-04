@@ -1,0 +1,98 @@
+#!/bin/dash
+
+# ./pigs-status displays the status of the files inside the current directory,
+# the index and the repository.
+
+# Checks if .pig has been initialised
+if [ ! -d ".pig" ]; then
+    echo "$0: error: pigs repository directory .pig not found"
+    exit 1
+fi
+
+# Checks if ./pigs-status is run correctly
+if [ ! "$#" -eq 0 ]; then
+    echo "Usage: $0"
+    exit 1
+fi
+
+# Display the status of the files in the current working directory
+# Statuses are appended to a 'status' text file that is sorted
+# by alphabetically by filename
+index_path=".pig/index"
+commit_path=".pig/commits"
+recent_commit_num=$(ls -A "$commit_path" | cut -d"." -f3 | tail -1)
+for file in *; do
+    if [ -f "$file" ] && file "$file" | grep -qv "/bin/dash script, ASCII text executable"; then
+        # If the file exists in the current working directory and latest commit but not the index, it is 'deleted from index'
+        if [ -f "$commit_path/.commit.$recent_commit_num/$file" ] && [ ! -f "$index_path/$file" ]; then
+            echo "$file - deleted from index" >> ".pig/status"
+        # If the file exists in the current working directory but not the latest commit and index, it is 'untracked'
+        elif [ ! -f "$commit_path/.commit.$recent_commit_num/$file" ] && [ ! -f "$index_path/$file" ]; then
+            echo "$file - untracked" >> ".pig/status"
+        # If the file exists in the current working directory and index but not the latest commit
+        elif [ ! -f "$commit_path/.commit.$recent_commit_num/$file" ] && [ -f "$index_path/$file" ]; then
+            diff_index_working=$(diff "$index_path/$file" "$file")
+            # If the file exists in the current working directory and index but not the latest commit and
+            # there is a difference between the file in the working directory and the index, it is
+            # 'added to index, file changed'
+            if [ -n "$diff_index_working" ]; then
+                echo "$file - added to index, file changed" >> ".pig/status"
+            # If the file exists in the current working directory and index but not the latest commit but
+            # there is no difference, it is 'added to index'
+            else
+                echo "$file - added to index" >> ".pig/status"
+            fi
+        # Checks the differences between the contents of the file in all three stages
+        elif [ -f "$file" ] && [ -f "$commit_path/.commit.$recent_commit_num/$file" ] && [ -f "$index_path/$file" ]; then
+            diff_index_working=$(diff "$index_path/$file" "$file")
+            diff_index_commit=$(diff "$index_path/$file" "$commit_path/.commit.$recent_commit_num/$file")
+            diff_commit_working=$(diff "$commit_path/.commit.$recent_commit_num/$file" "$file")
+            # If there is a difference between all three stages, it is 'file changed, different changes staged for commit'
+            if [ -n "$diff_index_working" ] && [ -n "$diff_commit_working" ] && [ -n "$diff_index_commit" ]; then
+                echo "$file - file changed, different changes staged for commit" >> ".pig/status"
+            # If there is no difference between the index and the working directory but there is a difference between 
+            # the index and the latest commit, it is 'file changed, changes staged for commit'
+            elif [ -z "$diff_index_working" ] && [ -n "$diff_index_commit" ]; then
+                echo "$file - file changed, changes staged for commit" >> ".pig/status"
+            # If there is a difference between the index and working directory and the latest commit and working directory
+            # but no difference between the index and latest commit, it is 'file changed, changes not staged for commit'
+            elif [ -n "$diff_index_working" ] && [ -n "$diff_commit_working" ] && [ -z "$diff_index_commit" ]; then
+                echo "$file - file changed, changes not staged for commit" >> ".pig/status"
+            # If there is no difference between the index and working directory and the latest commit and working directory,
+            # it is 'same as repo'
+            elif [ -z "$diff_index_working" ] && [ -z "$diff_commit_working" ]; then
+                echo "$file - same as repo" >> ".pig/status"
+            fi
+        fi
+    fi
+done
+
+# Display the status of the files added to the index
+for file in "$index_path"/*; do
+    if [ -f "$file" ] && file "$file" | grep -qv "/bin/dash script, ASCII text executable"; then
+        file_base=$(basename "$file")
+        # If the file is in the index and latest commit but not in the current working directory, it is 'file deleted'
+        if [ ! -f "$file_base" ] && [ -f "$commit_path/.commit.$recent_commit_num/$file_base" ]; then
+            echo "$file_base - file deleted" >> ".pig/status"
+        # If the file is in the index but not in the current working directory and latest commit, it is 'added to index, file deleted'
+        elif [ ! -f "$file_base" ] && [ ! -f "$commit_path/.commit.$recent_commit_num/$file_base" ]; then
+            echo "$file_base - added to index, file deleted" >> ".pig/status"
+        fi
+    fi
+done
+
+# Display the status of the files saved in the latest commit
+for file in "$commit_path/.commit.$recent_commit_num"/*; do
+    if [ -f "$file" ] && file "$file" | grep -qv "/bin/dash script, ASCII text executable"; then
+        file_base=$(basename "$file")
+        # If the file is in the latest commit but not in the current working directory or in the index, it is
+        # 'file deleted, deleted from index'
+        if [ ! -f "$file_base" ] && [ ! -f "$index_path/$file_base" ]; then
+            echo "$file_base - file deleted, deleted from index" >> ".pig/status"
+        fi
+    fi
+done
+
+# Sort and empty the status text file
+sort ".pig/status"
+> ".pig/status"

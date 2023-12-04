@@ -1,0 +1,128 @@
+#!/bin/dash
+
+# ./pigs-rm removes a file from the index or from the current
+# working directory and the index, depending on the specified 
+# option.
+
+# Checks if .pig has been initialised
+if [ ! -d ".pig" ]; then
+    echo "$0: error: pigs repository directory .pig not found"
+    exit 1
+fi
+
+# Checks if ./pigs-rm is run correctly
+if [ "$#" -eq 0 ]; then
+    echo "Usage: $0 [--force] [--cached] <filenames>"
+    exit 1
+elif [ "$#" -eq 1 ] && { [ "$1" = '--force' ] || [ "$1" = '--cached' ]; }; then
+    echo "Usage: $0 [--force] [--cached] <filenames>"
+    exit 1
+elif [ "$#" -eq 2 ]; then
+    if [ "$1" = '--force' ] && [ "$2" = '--cached' ]; then
+        echo "Usage: $0 [--force] [--cached] <filenames>"
+        exit 1
+    elif [ "$1" = '--cached' ] && [ "$2" = '--force' ]; then
+        echo "Usage: $0 [--force] [--cached] <filenames>"
+        exit 1
+    fi
+fi
+
+# Removes the specified files with the specified options.
+# ./pigs-rm --cached removes only the file from the index.
+# ./pigs-rm removes both the file from the index and the working directory.
+# ./pigs-rm --force overrides any possible error message from rm.
+# ./pigs-rm --force --cached overrides any possible error message from ./pigs-rm --cached.
+index_path=".pig/index"
+commit_path=".pig/commits"
+recent_commit_num=$(ls -A "$commit_path" | cut -d"." -f3 | tail -1)
+# Removes the file from the index
+if [ "$1" = "--cached" ]; then
+    for file in "$@"; do
+        if [ -f "$file" ]; then
+            # Checks if the file exists in the index
+            if [ ! -f "$index_path/$file" ]; then
+                echo "$0: error: '$file' is not in the pigs repository"
+                exit 1
+            else
+                if [ -f "$commit_path/.commit.$recent_commit_num/$file" ]; then
+                    # Checks if there is a difference between the files inside the index and latest commit
+                    # and the index and working directory 
+                    diff_index_commit=$(diff "$index_path/$file" "$commit_path/.commit.$recent_commit_num/$file")
+                    diff_index_working=$(diff "$index_path/$file" "$file")
+                    # Produces an error is there is a difference between the file in all three stages
+                    if [ -n "$diff_index_working" ] && [ -n "$diff_index_commit" ]; then
+                        echo "$0: error: '$file' in index is different to both the working file and the repository"
+                        exit 1
+                    fi
+                fi
+            fi
+            rm "$index_path"/"$file"
+        fi
+    done
+# Forcefully remove the file
+elif [ "$1" = "--force" ]; then
+    # Forcefully remove the file from the index
+    if [ "$2" = "--cached" ]; then
+        for file in "$@"; do
+            if [ -f "$file" ]; then
+                if [ ! -f "$index_path/$file" ]; then
+                    echo "$0: error: '$file' is not in the pigs repository"
+                    exit 1
+                fi
+                rm -f "$index_path"/"$file"
+            fi
+        done
+    # Otherwise, forcefully remove the file from the index and the working directory
+    else 
+        for file in "$@"; do
+            if [ -f "$file" ]; then
+                if [ ! -f "$index_path/$file" ]; then
+                    echo "$0: error: '$file' is not in the pigs repository"
+                    exit 1
+                fi
+                rm -f "$index_path"/"$file"
+                rm -f "$file"
+            fi
+        done
+    fi
+# Removes the file from the index and the working directory
+else
+    for file in "$@"; do
+        if [ -f "$file" ]; then
+            if [ ! -f "$index_path/$file" ]; then
+                echo "$0: error: '$file' is not in the pigs repository"
+                exit 1
+            else 
+                # Checks if the file exists in the latest commit
+                if [ ! -f "$commit_path/.commit.$recent_commit_num/$file" ]; then
+                    echo "$0: error: '$file' has staged changes in the index"
+                    exit 1
+                else 
+                    # Checks for the difference in the files from each different stages.
+                    diff_index_commit=$(diff "$index_path/$file" "$commit_path/.commit.$recent_commit_num/$file")
+                    diff_index_working=$(diff "$index_path/$file" "$file")
+                    diff_commit_working=$(diff "$commit_path/.commit.$recent_commit_num/$file" "$file")
+                    # If there is a difference between the index and latest commit but no difference
+                    # between the index and working directory, produces this error
+                    if [ -n "$diff_index_commit" ] && [ -z "$diff_index_working" ]; then
+                        echo "$0: error: '$file' has staged changes in the index"
+                        exit 1
+                    # Otherwise, if there is a difference between the latest commit and working directory
+                    elif [ -n "$diff_commit_working" ]; then
+                        # And there is a difference between the index and the latest commit, produces this error
+                        if [ -n "$diff_index_commit" ]; then
+                            echo "$0: error: '$file' in index is different to both the working file and the repository"
+                            exit 1
+                        # Otherwise, produce this error
+                        else
+                            echo "$0: error: '$file' in the repository is different to the working file"
+                            exit 1
+                        fi
+                    fi
+                fi
+            fi
+            rm "$index_path"/"$file"
+            rm "$file"
+        fi
+    done
+fi

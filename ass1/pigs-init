@@ -1,0 +1,24 @@
+#! /bin/dash
+
+# ./pigs-init initialises a new empty pigs repository in .pig
+# with the necessary files and directories
+
+# Check if .pig already exists
+if [ -d ".pig" ]; then
+    echo "$0: error: .pig already exists"
+    exit 1
+# Otherwise intialise the new repository
+else
+    if [ "$#" -eq 0 ]; then
+        mkdir ".pig"
+        mkdir ".pig/index"
+        mkdir ".pig/commits"
+        touch ".pig/log"
+        touch ".pig/status"
+        echo "Initialized empty pigs repository in .pig"
+    # Usage error
+    else
+        echo "Usage: $0"
+        exit 1
+    fi
+fi

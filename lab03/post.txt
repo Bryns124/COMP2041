@@ -1,0 +1,37 @@
+MINE5010 Fundamentals of Rock Behaviour for Underground Mining 
+MINE5020 Geotechnical Assessment for Underground Mining 
+MINE5030 Mining Excavations in Rock 
+MINE5040 Coal Mining Methods, Mine Planning and Applied Geomechanics 
+MINE5050 Ground Control Principles and Practice in Underground Coal Mining 
+MINE5060 Operational Geotechnical Management (Underground Coal Mining) 
+MINE8101 Fundamentals of Mining Engineering 
+MINE8115 Mine Processes, Systems and Analysis 
+MINE8120 Hazard Identification, Risk and Safety Management in Mining 
+MINE8130 Technology Management and Innovation in Mining 
+MINE8140 Mining Geomechanics 
+MINE8210 Management Systems - Projects, Processes, Contracts, Contractors 
+MINE8440 Mining Industry Research Project 1 
+MINE8445 Mining Industry Research Project 2 
+MINE8680 Geotechnical Data Collection and Analysis 
+MINE8690 Mining Geotechnical Project 
+MINE8710 Mine Slope Stability 
+MINE8720 Numerical Methods in Mine Geomechanics 
+MINE8760 Mine Geology and Geophysics for Mining Operations 
+MINE8780 Environmental Management for the Mining Industry 
+MINE8820 Mineral Processing 
+MINE8850 Mine Design and Feasibility 
+MINE8860 Drilling, Blasting and Machine Excavation 
+MINE8910 Mine Water and Waste Management 
+MINE8930 Uranium mining fundamentals 
+MINE8940 Mine Slope Monitoring Technologies 
+MINE8950 Sustainable Tailings Management 
+MINE9100 Mining Design Practice 
+MINE9901 Ventilation and Mine Services 
+MINE9902 Environmental Contaminants 
+MINE9903 Heat in Underground Mines 
+MINE9904 Ventilation System Management 
+MINE9905 Coal Mine Hazards and Control 
+MINE9910 Mine Ventilation 
+MINE9920 Spontaneous Combustion and Reactive Ground 
+MINE9921 Mine Ventilation Legislation 
+MINE9922 Mine Ventilation Practices 

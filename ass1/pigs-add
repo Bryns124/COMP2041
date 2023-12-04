@@ -1,0 +1,37 @@
+#!/bin/dash
+
+# ./pigs-add adds the files in the current working
+# directory to the index for it to be staged
+
+# Checks if .pig has been initialised
+if [ ! -d ".pig" ]; then
+    echo "$0: error: pigs repository directory .pig not found"
+    exit 1
+fi
+
+# Checks if ./pigs-add is run correctly
+if [ "$#" -eq 0 ]
+then
+    echo "Usage: $0 <filenames>"
+    exit 1
+fi
+
+# Adds the files in the current working directory to
+# the index
+index_path=".pig/index"
+for file in "$@"; do
+    if [ ! -f "$file" ]; then
+        # Error if the file doesn't exist in either index or working
+        # directory
+        if [ ! -f "$index_path"/"$file" ]; then 
+            echo "$0: error: can not open 'non_existent_file'"
+            exit 1
+        # Delete file in index if it does not exist in the working
+        # directory
+        else
+            rm "$index_path"/"$file"
+            exit 0
+        fi
+    fi
+    cp "$file" "$index_path"
+done

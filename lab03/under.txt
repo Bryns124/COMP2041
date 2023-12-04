@@ -1,0 +1,16 @@
+MINE1010 Mineral Resources Engineering 
+MINE2820 Minerals Processing 
+MINE3220 Resource Estimation 
+MINE3230 Mine Planning 
+MINE3310 Mining Geomechanics 
+MINE3430 Mining Systems 
+MINE3510 Mine Ventilation 
+MINE3630 Rock Breakage 
+MINE3910 Socio-Environmental Aspects of Mining 
+MINE4250 Hardrock Mine Design and Feasibility Project 
+MINE4310 Mine Geotechnical Engineering 
+MINE4450 Mining Research Project II 
+MINE4710 Mine Management 
+MINE4910 Mining in a Global Environment 
+MINE8130 Technology Management and Innovation in Mining 
+MINE8950 Sustainable Tailings Management 
